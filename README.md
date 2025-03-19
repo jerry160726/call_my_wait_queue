@@ -4,11 +4,11 @@ https://hackmd.io/eGiLmu2fRj6tork3b0hi5g?view
 
 ¾ãÅé¬yµ{·§­z
 ---
-```javascript
-User À³¥Îµ{¦¡¨Ï¥Î `syscall(XXX, 1)` ±N process ¥[¤J wait queue¡C
-µ¥«Ý±ø¥óº¡¨¬«á¡Aprocess ³Q³ê¿ô¡C
-¥Dµ{¦¡¨Ï¥Î `syscall(XXX, 2)` ¨Ì¦¸³ê¿ôµ¥«Ý¤¤ªº process¡A«ö·Ó FIFO ¶¶§Ç°h¥X¡C
-```
+
+>User À³¥Îµ{¦¡¨Ï¥Î `syscall(XXX, 1)` ±N process ¥[¤J wait queue¡C
+>µ¥«Ý±ø¥óº¡¨¬«á¡Aprocess ³Q³ê¿ô¡C
+>¥Dµ{¦¡¨Ï¥Î `syscall(XXX, 2)` ¨Ì¦¸³ê¿ôµ¥«Ý¤¤ªº process¡A«ö·Ó FIFO ¶¶§Ç°h¥X¡C
+
 System call ªº¨ãÅé¥\¯à¥Ñ Kernel ¤¤ªº `SYSCALL_DEFINE` macro ¹ê²{¡G
 `SYSCALL_DEFINE1(call_my_wait_queue, int, id)`
 
@@ -25,7 +25,7 @@ Context switch ¦^ User space¡G¨t²Î©I¥s§¹¦¨«á¡A±±¨îªð¦^ User space¡Aµ{¦¡¥i¥HÄ~Äò°
 
 ²Ó¸`¸ÑÄÀ
 ---
-```c
+```c=
 DECLARE_WAIT_QUEUE_HEAD(my_wait_queue); // «Å§i¤@­Óµ¥«Ý¦î¦C
 LIST_HEAD(my_list);                     // ©w¸q¤@­Ó list head¡AÀx¦s process ¸ê®Æ
 static DEFINE_MUTEX(my_mutex);          // ©w¸q¤¬¥¸Âê¡A«OÅ@¦@¨É¸ê·½
