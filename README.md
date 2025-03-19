@@ -25,7 +25,7 @@ Context switch ¦^ User space¡G¨t²Î©I¥s§¹¦¨«á¡A±±¨îªð¦^ User space¡Aµ{¦¡¥i¥HÄ~Äò°
 
 ²Ó¸`¸ÑÄÀ
 ---
-```c=
+```c
 DECLARE_WAIT_QUEUE_HEAD(my_wait_queue); // «Å§i¤@­Óµ¥«Ý¦î¦C
 LIST_HEAD(my_list);                     // ©w¸q¤@­Ó list head¡AÀx¦s process ¸ê®Æ
 static DEFINE_MUTEX(my_mutex);          // ©w¸q¤¬¥¸Âê¡A«OÅ@¦@¨É¸ê·½
@@ -37,7 +37,7 @@ static int condition = 0;               // µ¥«Ý¦î¦Cªº±ø¥ó
 
 * my_mutex : «Å§i¨Ãªì©l¤Æ¤@­Ó¦W¬° my_mutex ªº¤¬¥¸Âê¡A¥Î©ó«OÅ@¦@¨É¸ê·½¡]¦p my_list¡^¥H¨¾¤î race condition¡C
 
-* condition : ©w¸q¤@­Ó±ø¥óÅÜ¼Æ condition¡A¥Î¨Ó±±¨î wait queue ¤¤ process ¬O§_À³¸Ó³Q³ê¿ô¡C·í condition º¡¨¬ process ªºµ¥«Ý±ø¥ó®É¡A¸Ó process ·|³Q³ê¿ô¡C
+* condition : ©w¸q¤@­Ó±ø¥óÅÜ¼Æ `condition`¡A¥Î¨Ó±±¨î wait queue ¤¤ process ¬O§_À³¸Ó³Q³ê¿ô¡C·í condition º¡¨¬ process ªºµ¥«Ý±ø¥ó®É¡A¸Ó process ·|³Q³ê¿ô¡C
 
 ```c
 static int enter_wait_queue(void){
@@ -54,18 +54,35 @@ static int enter_wait_queue(void){
 }
 ```
 
-> ·í process ©I¥s¦¹¨ç¼Æ®É¡A¥¦·|³Q²K¥[¨ì wait queue `my_wait_queue`¡A¨Ã¶i¤JºÎ¯vª¬ºA¡Aª½¨ì±ø¥ó `condition == pid` º¡¨¬¬°¤î¡C
-`wait_event_interruptible` ¬O Kernel ´£¨Ñªº API¡A¥Î©óµ¥«Ý¬Y­Ó±ø¥ó¡C
+>·í process ©I¥s¦¹¨ç¼Æ®É¡A¥¦·|³Q²K¥[¨ì wait queue `my_wait_queue`¡A¨Ã¶i¤JºÎ¯vª¬ºA¡Aª½¨ì±ø¥ó `condition == pid` º¡¨¬¬°¤î¡C
+>`wait_event_interruptible` ¬O Kernel ´£¨Ñªº API¡A¥Î©óµ¥«Ý¬Y­Ó±ø¥ó¡C
 
+* ¨Ï¥Î `current` «ü¼ÐÀò¨ú·í«e process ªº PID¡C
 
-¨Ï¥Î current «ü¼ÐÀò¨ú·í«e process ªº PID¡C
+* «Å§i¤@­Ó«ü¦V `my_data` µ²ºcªº«ü¼Ð `entry`¡A¥Î¨ÓÀx¦s·í«e process ªº¬ÛÃö¸ê°T¡C
 
-«Å§i¤@­Ó«ü¦V my_data µ²ºcªº«ü¼Ð entry¡A¥Î¨ÓÀx¦s·í«e process ªº¬ÛÃö¸ê°T¡C
+* ¨Ï¥Î `kmalloc` ¨ç¼Æ¬° `my_data` µ²ºc¤À°t°O¾ÐÅé¡C`GFP_KERNEL` ¬O¤À°t°O¾ÐÅéªº¼Ð»x¡Aªí¥Ü¸Ó¾Þ§@¬O¦b kernel space °õ¦æ¡A¤¹³\ºÎ¯vµ¥«Ý¡C
 
-¨Ï¥Î kmalloc ¨ç¼Æ¬° my_data µ²ºc¤À°t°O¾ÐÅé¡C
+> ```c
+> void *kmalloc(size_t size, gfp_t flags);
+> ```
+> `flags`¡G¤À°t°O¾ÐÅéªº¤è¦¡©Î±ø¥ó¡]¦p¬O§_¤¹³\ºÎ¯vµ¥«Ýµ¥¡^¡Ckmalloc ªð¦^ªº°O¾ÐÅé¦a§}³Q½á­Èµ¹ entry¡A¨Ï¨ä«ü¦V·s¤À°tªº°O¾ÐÅé°Ï°ì¡C
 
+¦¹¦æµ{¦¡½X¬°ÅÜ¼Æ `entry` ¤À°t¤@¶ô¤j¤p¬° `sizeof(*entry)` ªº°O¾ÐÅéªÅ¶¡¡A¥Î©óÀx¦s `struct my_data` ªº¸ê®Æ¡C
+`entry` ¬O `struct my_data` ªº«ü¼Ð¡A¤À°t³o¬q°O¾ÐÅé¬O¬°¤F¦b `list_add_tail` ¤¤±N `entry` §@¬°Ãìªíªº¸`ÂIÀx¦s process ¸ê®Æ¡]¦p PID¡^¡Cªð¦^ªº°O¾ÐÅé¦a§}½á­Èµ¹ `entry`¡A¥H«K«áÄò¨Ï¥Î¡C
+* `entry->pid = pid` ±N·í«e process ªº PID ¦sÀx¨ì `my_data` µ²ºc¤¤¡C
+
+```c
 list_add_tail(&entry->list, &my_list);
+```
+> * `entry->list` ªí¥Ü·s¸`ÂI¡C
+> * `my_list` ¬O¥DÃìªí¡C
+> * ±N `entry->list` §@¬°·s¸`ÂI¥[¤J¨ì `my_list` ªº§À³¡¡C
+> * ¹B¦æ«á¡A`my_list` ªº§À¸`ÂI·|§ó·s¬° `entry->list`¡A«OÃÒ«áÄò·s¼Wªº¸`ÂIÄ~Äò²K¥[¨ì§À³¡¡Aºû«ù FIFO ¶¶§Ç¡C
 
+* ·í«e process ¶i¤JºÎ¯v¡Aµ¥«Ý `condition == pid` ®É³Q³ê¿ô¡C`my_wait_queue` ¬O wait queue¡A`condition == pid` ¬O process ªº³ê¿ô±ø¥ó¡C
+
+```
 static int clean_wait_queue(void){
     struct my_data *entry;
     list_for_each_entry(entry, &my_list, list) {
@@ -75,12 +92,11 @@ static int clean_wait_queue(void){
     }
     return 0;
 }
+```
 
-:::success
 ¹M¾ú `my_list`¡A¨Ì¦¸³]¸m `condition` ¬° process ªº PID¡A¨Ã³ê¿ô¹ïÀ³ªº process¡C
 `wake_up_interruptible` ¬O kernel ´£¨Ñªº API¡A¥Î©óµ¥«Ý¬Y­Ó±ø¥ó¡C
-:::
-
+```c
 SYSCALL_DEFINE1(call_my_wait_queue, int, id){
     switch (id){
         case 1:
@@ -94,20 +110,15 @@ SYSCALL_DEFINE1(call_my_wait_queue, int, id){
     }
     return 0;
 }
+```
 
-:::success
-- `id == 1` ®É¡A½Õ¥Î `enter_wait_queue()`¡A±N·í«e process ¥[¤J wait queue¡C
-- `id == 2` ®É¡A½Õ¥Î `clean_wait_queue()`¡A¨Ì¦¸³ê¿ôµ¥«Ý queue ¤¤ªº process¡C
-:::
+* `id == 1` ®É¡A½Õ¥Î `enter_wait_queue()`¡A±N·í«e process ¥[¤J wait queue¡C
+* `id == 2` ®É¡A½Õ¥Î `clean_wait_queue()`¡A¨Ì¦¸³ê¿ôµ¥«Ý queue ¤¤ªº process¡C
 
-id == 1¡G
 
-Àò¨ú¤¬¥¸Âê my_mutex¡A¨¾¤î Multi processing ¦P®É¾Þ§@ my_list¡C
-
-©I¥s enter_wait_queue()¡A±N·í«e process ¥[¤J wait queue¡C
-
+* `id == 1`¡GÀò¨ú¤¬¥¸Âê `my_mutex`¡A¨¾¤î Multi processing ¦P®É¾Þ§@ my_list¡C
+©I¥s `enter_wait_queue()`¡A±N·í«e process ¥[¤J wait queue¡C
 ³Ì«áÄÀ©ñ¤¬¥¸Âê¡C
 
-id == 2¡G
-
-©I¥s clean_wait_queue()¡A¨Ì¦¸³ê¿ô wait queue ¤¤ªº©Ò¦³ process¡C
+* `id == 2`¡G
+©I¥s `clean_wait_queue()`¡A¨Ì¦¸³ê¿ô wait queue ¤¤ªº©Ò¦³ process¡C
