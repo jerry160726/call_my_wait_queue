@@ -4,7 +4,7 @@ https://hackmd.io/eGiLmu2fRj6tork3b0hi5g?view
 
 ¾ãÅé¬yµ{·§­z
 ---
-```
+```javascript
 User À³¥Îµ{¦¡¨Ï¥Î `syscall(XXX, 1)` ±N process ¥[¤J wait queue¡C
 µ¥«Ý±ø¥óº¡¨¬«á¡Aprocess ³Q³ê¿ô¡C
 ¥Dµ{¦¡¨Ï¥Î `syscall(XXX, 2)` ¨Ì¦¸³ê¿ôµ¥«Ý¤¤ªº process¡A«ö·Ó FIFO ¶¶§Ç°h¥X¡C
@@ -13,9 +13,10 @@ System call ªº¨ãÅé¥\¯à¥Ñ Kernel ¤¤ªº `SYSCALL_DEFINE` macro ¹ê²{¡G
 `SYSCALL_DEFINE1(call_my_wait_queue, int, id)`
 
 * call_my_wait_queue ¬O System call ªº¦WºÙ¡C
+
 * int id ¬O±q User space ¶Ç»¼¹L¨Óªº°Ñ¼Æ¡C
 
-®Ú¾Ú¶Ç¤Jªº°Ñ¼Æ id¡A°õ¦æ¬ÛÀ³ªº¥\¯à¡G
+®Ú¾Ú¶Ç¤Jªº°Ñ¼Æ `id`¡A°õ¦æ¬ÛÀ³ªº¥\¯à¡G
 
 * id == 1¡G±N·í«e process ¥[¤J wait queue¡C
 * id == 2¡G³ê¿ô queue ¤¤ªº©Ò¦³ process¡C
@@ -24,22 +25,21 @@ Context switch ¦^ User space¡G¨t²Î©I¥s§¹¦¨«á¡A±±¨îªð¦^ User space¡Aµ{¦¡¥i¥HÄ~Äò°
 
 ²Ó¸`¸ÑÄÀ
 ---
-```c=
+```c
 DECLARE_WAIT_QUEUE_HEAD(my_wait_queue); // «Å§i¤@­Óµ¥«Ý¦î¦C
 LIST_HEAD(my_list);                     // ©w¸q¤@­Ó list head¡AÀx¦s process ¸ê®Æ
 static DEFINE_MUTEX(my_mutex);          // ©w¸q¤¬¥¸Âê¡A«OÅ@¦@¨É¸ê·½
 static int condition = 0;               // µ¥«Ý¦î¦Cªº±ø¥ó
 ```
+* my_wait_queue : ¨Ï¥Î Kernel ´£¨Ñªº macro DECLARE_WAIT_QUEUE_HEAD¡A«Å§i¤@­Ó¦W¬° my_wait_queue ªº wait queue¡C
 
+* my_list : «Å§i¤@­ÓÃìªí my_list¡A¥Î¨ÓÀx¦s process ¸ê°T¡]¦p PID¡^¡Cmy_list ¬O¤@­Ó Kernel ´£¨Ñªº Doubly Linked List µ²ºc¡C
 
-my_wait_queue : ¨Ï¥Î Kernel ´£¨Ñªº macro DECLARE_WAIT_QUEUE_HEAD¡A«Å§i¤@­Ó¦W¬° my_wait_queue ªº wait queue¡C
+* my_mutex : «Å§i¨Ãªì©l¤Æ¤@­Ó¦W¬° my_mutex ªº¤¬¥¸Âê¡A¥Î©ó«OÅ@¦@¨É¸ê·½¡]¦p my_list¡^¥H¨¾¤î race condition¡C
 
-my_list : «Å§i¤@­ÓÃìªí my_list¡A¥Î¨ÓÀx¦s process ¸ê°T¡]¦p PID¡^¡Cmy_list ¬O¤@­Ó Kernel ´£¨Ñªº Doubly Linked List µ²ºc¡C
+* condition : ©w¸q¤@­Ó±ø¥óÅÜ¼Æ condition¡A¥Î¨Ó±±¨î wait queue ¤¤ process ¬O§_À³¸Ó³Q³ê¿ô¡C·í condition º¡¨¬ process ªºµ¥«Ý±ø¥ó®É¡A¸Ó process ·|³Q³ê¿ô¡C
 
-my_mutex : «Å§i¨Ãªì©l¤Æ¤@­Ó¦W¬° my_mutex ªº¤¬¥¸Âê¡A¥Î©ó«OÅ@¦@¨É¸ê·½¡]¦p my_list¡^¥H¨¾¤î race condition¡C
-
-condition : ©w¸q¤@­Ó±ø¥óÅÜ¼Æ condition¡A¥Î¨Ó±±¨î wait queue ¤¤ process ¬O§_À³¸Ó³Q³ê¿ô¡C·í condition º¡¨¬ process ªºµ¥«Ý±ø¥ó®É¡A¸Ó process ·|³Q³ê¿ô¡C
-
+```c
 static int enter_wait_queue(void){
     int pid = (int)current->pid;                    // Àò¨ú·í«e process ªº PID
     struct my_data *entry;
@@ -52,11 +52,11 @@ static int enter_wait_queue(void){
     wait_event_interruptible(my_wait_queue, condition == pid);  
     return 0;
 }
+```
 
-:::success
-·í process ©I¥s¦¹¨ç¼Æ®É¡A¥¦·|³Q²K¥[¨ì wait queue `my_wait_queue`¡A¨Ã¶i¤JºÎ¯vª¬ºA¡Aª½¨ì±ø¥ó `condition == pid` º¡¨¬¬°¤î¡C
+> ·í process ©I¥s¦¹¨ç¼Æ®É¡A¥¦·|³Q²K¥[¨ì wait queue `my_wait_queue`¡A¨Ã¶i¤JºÎ¯vª¬ºA¡Aª½¨ì±ø¥ó `condition == pid` º¡¨¬¬°¤î¡C
 `wait_event_interruptible` ¬O Kernel ´£¨Ñªº API¡A¥Î©óµ¥«Ý¬Y­Ó±ø¥ó¡C
-:::
+
 
 ¨Ï¥Î current «ü¼ÐÀò¨ú·í«e process ªº PID¡C
 
