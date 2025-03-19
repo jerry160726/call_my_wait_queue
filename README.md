@@ -82,8 +82,8 @@ list_add_tail(&entry->list, &my_list);
 
 * 當前 process 進入睡眠，等待 `condition == pid` 時被喚醒。`my_wait_queue` 是 wait queue，`condition == pid` 是 process 的喚醒條件。
 
-```c=
-15static int clean_wait_queue(void){
+```c
+static int clean_wait_queue(void){
     struct my_data *entry;
     list_for_each_entry(entry, &my_list, list) {
         condition = entry->pid;                     // 設置條件
@@ -93,9 +93,18 @@ list_add_tail(&entry->list, &my_list);
     return 0;
 }
 ```
+>遍歷 `my_list`，依次設置 `condition` 為 process 的 PID，並喚醒對應的 process。
+>`wake_up_interruptible` 是 kernel 提供的 API，用於等待某個條件。
+* 宣告一個指向 `my_data` 的指標 `*entry`，用於遍歷 `my_list` 中的每個 process 資料。
+* 使用 kernel 提供的 `list_for_each_entry` marco，遍歷 `my_list` 鏈表中的每個節點。`entry` 是當前節點的指標。
+* 每次迭代：
+`entry` 依次指向 `my_list` 中的下一個節點。
+根據 `entry->pid` 設定條件，並喚醒對應 process。
+遍歷過程遵循 Doubly Linked List 的順序，保證節點按 FIFO 順序處理。
+* `condition = entry->pid`: 將條件變數 condition 設置為當前 process 的 PID，滿足 process 的喚醒條件。
+* 喚醒 wait queue `my_wait_queue` 中符合條件的 process。被喚醒的 process 會從 `wait_event_interruptible` 函數返回並繼續執行。
+* 使用 `msleep` 函數延遲 100 毫秒，模擬 FIFO 的喚醒順序。
 
-遍歷 `my_list`，依次設置 `condition` 為 process 的 PID，並喚醒對應的 process。
-`wake_up_interruptible` 是 kernel 提供的 API，用於等待某個條件。
 ```c
 SYSCALL_DEFINE1(call_my_wait_queue, int, id){
     switch (id){
@@ -112,13 +121,11 @@ SYSCALL_DEFINE1(call_my_wait_queue, int, id){
 }
 ```
 
-* `id == 1` 時，調用 `enter_wait_queue()`，將當前 process 加入 wait queue。
-* `id == 2` 時，調用 `clean_wait_queue()`，依次喚醒等待 queue 中的 process。
-
-
+>* `id == 1` 時，調用 `enter_wait_queue()`，將當前 process 加入 wait queue。
+>* `id == 2` 時，調用 `clean_wait_queue()`，依次喚醒等待 queue 中的 process。
 * `id == 1`：獲取互斥鎖 `my_mutex`，防止 Multi processing 同時操作 my_list。
-呼叫 `enter_wait_queue()`，將當前 process 加入 wait queue。
-最後釋放互斥鎖。
+    * 呼叫 `enter_wait_queue()`，將當前 process 加入 wait queue。
+    * 最後釋放互斥鎖。
 
 * `id == 2`：
 呼叫 `clean_wait_queue()`，依次喚醒 wait queue 中的所有 process。
