@@ -82,7 +82,7 @@ list_add_tail(&entry->list, &my_list);
 
 * 當前 process 進入睡眠，等待 `condition == pid` 時被喚醒。`my_wait_queue` 是 wait queue，`condition == pid` 是 process 的喚醒條件。
 
-```c
+```c=
 15static int clean_wait_queue(void){
     struct my_data *entry;
     list_for_each_entry(entry, &my_list, list) {
