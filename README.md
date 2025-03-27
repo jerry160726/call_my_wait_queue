@@ -1,6 +1,11 @@
-技術筆記
----
-https://hackmd.io/eGiLmu2fRj6tork3b0hi5g?view
+# Wait Queue
+
+## Environment
+```
+OS: Ubuntu 22.04
+ARCH: X86_64
+Source Version: 5.15.137
+```
 
 整體流程概述
 ---
