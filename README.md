@@ -14,7 +14,7 @@ Source Version: 5.15.137
 >主程式使用 `syscall(XXX, 2)` 依次喚醒等待中的 process，按照 FIFO 順序退出。
 
 System call 的具體功能由 Kernel 中的 `SYSCALL_DEFINE` macro 實現：  
-```
+```c
 SYSCALL_DEFINE1(call_my_wait_queue, int, id)
 ```
 * `call_my_wait_queue` 是 System call 的名稱。
@@ -52,7 +52,6 @@ static int enter_wait_queue(void){
     return 0;
 }
 ```
-
 >當 process 呼叫此函數時，它會被添加到 wait queue `my_wait_queue`，並進入睡眠狀態，直到條件 `condition == pid` 滿足為止。  
 >`wait_event_interruptible` 是 Kernel 提供的 API，用於等待某個條件。
 
@@ -125,3 +124,19 @@ SYSCALL_DEFINE1(call_my_wait_queue, int, id){
     * 最後釋放互斥鎖。
 * `id == 2`：
 呼叫 `clean_wait_queue()`，依次喚醒 wait queue 中的所有 process。
+
+## Project2 - 工作流程
+> **1. 創建執行緒：**
+> * 主程式創建 10 個執行緒，每個執行緒執行 `enter_wait_queue` 函數。
+> * 執行緒進入等待隊列，執行系統呼叫進入休眠。
+> 
+> **2. 清理等待隊列：**
+> * 主程式暫停 1 秒，確保所有執行緒都已加入等待隊列。
+> * 呼叫 `clean_wait_queue`，喚醒所有等待隊列中的執行緒。
+> 
+> **3. 結束執行緒：**
+> * 主程式等待所有執行緒完成（使用 `pthread_join`）
+> * 程式結束，所有資源釋放。
+
+## 執行結果
+![01](https://imgur.com/UyeTa0y.png)
