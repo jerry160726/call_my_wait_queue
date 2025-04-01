@@ -142,4 +142,4 @@ SYSCALL_DEFINE1(call_my_wait_queue, int, id){
 ![01](https://imgur.com/UyeTa0y.png)
 
 ---
-[筆記網站](https://hackmd.io/@Jyen024/Syd8Z6zNkx)
+[筆記網站](https://hackmd.io/@Jyen024/rJ74EzKaJx)
