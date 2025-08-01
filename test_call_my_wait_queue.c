@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <sys/syscall.h>
 #define NUM_THREADS 10
+// 引入基本函式庫。定義使用10個執行緒
 
 void *enter_wait_queue(void *thread_id){
     fprintf(stderr, "enter wait queue thread_id: %d\n", *(int *)thread_id);
